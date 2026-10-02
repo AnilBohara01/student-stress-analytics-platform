@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — StressLens{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4 my-3">
+  <div class="col-md-5 col-lg-4">
+    <div class="panel-clean p-4">
+      <div class="text-center mb-4">
+        <h1 class="h2 mb-1">Welcome back</h1>
+        <p class="text-soft fs-7 mb-0">Sign in to access your student stress analytics dashboard</p>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        {% if request.GET.next %}
+          <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          {{ form.username }}
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Password</label>
+          {{ form.password }}
+        </div>
+
+        <button type="submit" class="btn btn-primary-custom w-100 justify-content-center mb-3">
+          Sign In
+        </button>
+      </form>
+
+      <div class="text-center pt-3 border-top">
+        <p class="fs-7 text-soft mb-0">
+          Don't have an account? <a href="{% url 'accounts:register' %}" class="fw-semibold text-teal text-decoration-none">Register here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

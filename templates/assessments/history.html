@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Assessment History — StressLens{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h2 mb-1">Assessment History</h1>
+    <p class="text-secondary fs-7 mb-0">Historical log of all submitted assessments and model predictions</p>
+  </div>
+  <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom">
+    <i class="fa-solid fa-plus me-1"></i> New Assessment
+  </a>
+</div>
+
+{% if assessments %}
+  <div class="card-custom">
+    <div class="table-responsive">
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Category</th>
+            <th>Sleep</th>
+            <th>Study</th>
+            <th>Exam Pressure</th>
+            <th>High Stress Prob.</th>
+            <th>Prediction Result</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in assessments %}
+            <tr>
+              <td class="fw-medium">{{ item.created_at|date:"M d, Y - H:i" }}</td>
+              <td><span class="badge-clean badge-neutral">{{ item.get_student_type_display }}</span></td>
+              <td>{{ item.sleep_hours }} hrs</td>
+              <td>{{ item.study_hours }} hrs</td>
+              <td>{{ item.exam_pressure }} / 10</td>
+              <td class="fw-semibold text-primary">{% widthratio item.probability_high_stress 1 100 %}%</td>
+              <td>
+                {% if item.predicted_stress_level == 1 %}
+                  <span class="badge-clean badge-high-stress">High Stress</span>
+                {% else %}
+                  <span class="badge-clean badge-low-stress">Low / Normal</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'assessments:detail' pk=item.pk %}" class="btn btn-outline-custom btn-sm">
+                  View Report
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="card-custom text-center py-5 my-3">
+    <div class="badge-clean badge-neutral mx-auto mb-3" style="width: 48px; height: 48px; justify-content: center;">
+      <i class="fa-solid fa-folder-open text-teal fs-4"></i>
+    </div>
+    <h2 class="h3 mb-2">You haven't completed an assessment yet</h2>
+    <p class="text-secondary fs-7 max-w-500 mx-auto mb-4">Complete your first assessment to record your lifestyle indicators and begin building your history.</p>
+    <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom btn-lg">
+      <i class="fa-solid fa-plus-circle me-1"></i> Start Assessment
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Trends & Analytics — StressLens{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h2 mb-1">Lifestyle Trends & Longitudinal Analytics</h1>
+    <p class="text-secondary fs-7 mb-0">Track historical variations across your reported lifestyle indicators and stress probability scores</p>
+  </div>
+  <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom">
+    <i class="fa-solid fa-plus me-1"></i> New Assessment
+  </a>
+</div>
+
+{% if total_count > 0 %}
+
+  <!-- Historical KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Assessment Logs</div>
+        <div class="kpi-value">{{ total_count }}</div>
+        <div class="kpi-subtext">Total submissions to date</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Historical Avg Sleep</div>
+        <div class="kpi-value">{{ metrics.avg_sleep|floatformat:1 }} <span class="fs-6 fw-normal text-muted">hrs</span></div>
+        <div class="kpi-subtext">Daily restorative sleep</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Exam Pressure</div>
+        <div class="kpi-value">{{ metrics.avg_exam_pressure|floatformat:1 }} <span class="fs-6 fw-normal text-muted">/ 10</span></div>
+        <div class="kpi-subtext">Perceived workload score</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Family Support</div>
+        <div class="kpi-value">{{ metrics.avg_support|floatformat:1 }} <span class="fs-6 fw-normal text-muted">/ 10</span></div>
+        <div class="kpi-subtext">Perceived support rating</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-Indicator Longitudinal Chart Card -->
+  <div class="card-custom mb-4">
+    <div class="card-header-clean">
+      <h3 class="card-title-clean">
+        <i class="fa-solid fa-chart-line text-teal me-1"></i> Longitudinal Assessment Trends
+      </h3>
+      <span class="fs-7 text-muted">Multi-Metric Analysis</span>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="multiTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Side-by-Side Assessment Comparison Deltas -->
+  {% if previous_assessment and latest_assessment %}
+    <div class="card-custom mb-4">
+      <div class="card-header-clean">
+        <div>
+          <h3 class="card-title-clean mb-1">
+            <i class="fa-solid fa-code-compare text-teal me-1"></i> Assessment Comparison: Previous vs Latest
+          </h3>
+          <p class="fs-7 text-muted mb-0">Observed changes between Log #{{ previous_assessment.pk }} ({{ previous_assessment.created_at|date:"M d" }}) and Log #{{ latest_assessment.pk }} ({{ latest_assessment.created_at|date:"M d" }})</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Indicator Name</th>
+              <th>Previous Log ({{ previous_assessment.created_at|date:"M d" }})</th>
+              <th>Latest Log ({{ latest_assessment.created_at|date:"M d" }})</th>
+              <th>Observed Delta</th>
+              <th>Directional Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Stress Probability -->
+            <tr>
+              <td class="fw-medium">High Stress Probability</td>
+              <td>{% widthratio previous_assessment.probability_high_stress 1 100 %}%</td>
+              <td class="fw-bold">{% widthratio latest_assessment.probability_high_stress 1 100 %}%</td>
+              <td>
+                {% if deltas.stress_prob > 0 %}
+                  <span class="badge-clean badge-high-stress">+{{ deltas.stress_prob|floatformat:1 }}%</span>
+                {% elif deltas.stress_prob < 0 %}
+                  <span class="badge-clean badge-low-stress">{{ deltas.stress_prob|floatformat:1 }}%</span>
+                {% else %}
+                  <span class="badge-clean badge-neutral">0.0%</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if deltas.stress_prob > 0 %}
+                  <span class="fs-7 text-danger"><i class="fa-solid fa-arrow-up me-1"></i> Stress Score Increased</span>
+                {% elif deltas.stress_prob < 0 %}
+                  <span class="fs-7 text-success"><i class="fa-solid fa-arrow-down me-1"></i> Stress Score Reduced</span>
+                {% else %}
+                  <span class="fs-7 text-muted"><i class="fa-solid fa-minus me-1"></i> Unchanged</span>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Sleep Duration -->
+            <tr>
+              <td class="fw-medium">Sleep Duration</td>
+              <td>{{ previous_assessment.sleep_hours }} hrs</td>
+              <td class="fw-bold">{{ latest_assessment.sleep_hours }} hrs</td>
+              <td>
+                {% if deltas.sleep > 0 %}
+                  <span class="badge-clean badge-low-stress">+{{ deltas.sleep|floatformat:1 }} hrs</span>
+                {% elif deltas.sleep < 0 %}
+                  <span class="badge-clean badge-high-stress">{{ deltas.sleep|floatformat:1 }} hrs</span>
+                {% else %}
+                  <span class="badge-clean badge-neutral">0.0 hrs</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if deltas.sleep > 0 %}
+                  <span class="fs-7 text-success"><i class="fa-solid fa-arrow-up me-1"></i> Rest Improved</span>
+                {% elif deltas.sleep < 0 %}
+                  <span class="fs-7 text-warning"><i class="fa-solid fa-arrow-down me-1"></i> Rest Reduced</span>
+                {% else %}
+                  <span class="fs-7 text-muted"><i class="fa-solid fa-minus me-1"></i> Constant</span>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Study Hours -->
+            <tr>
+              <td class="fw-medium">Daily Study Hours</td>
+              <td>{{ previous_assessment.study_hours }} hrs</td>
+              <td class="fw-bold">{{ latest_assessment.study_hours }} hrs</td>
+              <td>
+                {% if deltas.study > 0 %}
+                  <span class="badge-clean badge-neutral">+{{ deltas.study|floatformat:1 }} hrs</span>
+                {% elif deltas.study < 0 %}
+                  <span class="badge-clean badge-neutral">{{ deltas.study|floatformat:1 }} hrs</span>
+                {% else %}
+                  <span class="badge-clean badge-neutral">0.0 hrs</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if deltas.study > 0 %}
+                  <span class="fs-7 text-teal"><i class="fa-solid fa-arrow-up me-1"></i> Study Time Increased</span>
+                {% else %}
+                  <span class="fs-7 text-muted"><i class="fa-solid fa-minus me-1"></i> Neutral</span>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Exam Pressure -->
+            <tr>
+              <td class="fw-medium">Exam Pressure Rating</td>
+              <td>{{ previous_assessment.exam_pressure }} / 10</td>
+              <td class="fw-bold">{{ latest_assessment.exam_pressure }} / 10</td>
+              <td>
+                {% if deltas.exam_pressure > 0 %}
+                  <span class="badge-clean badge-high-stress">+{{ deltas.exam_pressure|floatformat:1 }}</span>
+                {% elif deltas.exam_pressure < 0 %}
+                  <span class="badge-clean badge-low-stress">{{ deltas.exam_pressure|floatformat:1 }}</span>
+                {% else %}
+                  <span class="badge-clean badge-neutral">0.0</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if deltas.exam_pressure > 0 %}
+                  <span class="fs-7 text-danger"><i class="fa-solid fa-arrow-up me-1"></i> Pressure Increased</span>
+                {% elif deltas.exam_pressure < 0 %}
+                  <span class="fs-7 text-success"><i class="fa-solid fa-arrow-down me-1"></i> Pressure Relieved</span>
+                {% else %}
+                  <span class="fs-7 text-muted"><i class="fa-solid fa-minus me-1"></i> Constant</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card-custom text-center py-4 mb-4">
+      <p class="text-secondary fs-7 mb-0">
+        <i class="fa-solid fa-circle-info me-1"></i> Complete at least <strong>2 assessments</strong> over time to display side-by-side assessment comparison deltas.
+      </p>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="card-custom text-center py-5 my-3">
+    <div class="badge-clean badge-neutral mx-auto mb-3" style="width: 48px; height: 48px; justify-content: center;">
+      <i class="fa-solid fa-chart-line text-teal fs-4"></i>
+    </div>
+    <h2 class="h3 mb-2">No Trend Analytics Available Yet</h2>
+    <p class="text-secondary fs-7 max-w-500 mx-auto mb-4">Complete assessments over time to visualize your stress trends and compare lifestyle changes.</p>
+    <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom btn-lg">
+      <i class="fa-solid fa-plus-circle me-1"></i> Start Assessment
+    </a>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if total_count > 0 %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('multiTrendChart');
+    if (!ctx) return;
+
+    const dates = [{% for item in user_assessments %}"{{ item.created_at|date:'M d' }}",{% endfor %}];
+    const stressProbs = [{% for item in user_assessments %}{{ item.probability_high_stress|floatformat:2 }},{% endfor %}];
+    const sleepHours = [{% for item in user_assessments %}{{ item.sleep_hours|floatformat:1 }},{% endfor %}];
+    const examPressure = [{% for item in user_assessments %}{{ item.exam_pressure|floatformat:1 }},{% endfor %}];
+
+    new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'High Stress Probability',
+            data: stressProbs,
+            borderColor: '#B91C1C',
+            backgroundColor: 'rgba(185, 28, 28, 0.05)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2,
+            yAxisID: 'yStress'
+          },
+          {
+            label: 'Sleep Hours',
+            data: sleepHours,
+            borderColor: '#15803D',
+            borderWidth: 2,
+            tension: 0.3,
+            yAxisID: 'yMetrics'
+          },
+          {
+            label: 'Exam Pressure (0-10)',
+            data: examPressure,
+            borderColor: '#B45309',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            tension: 0.3,
+            yAxisID: 'yMetrics'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#4A5568', font: { size: 12 } }
+          }
+        },
+        scales: {
+          yStress: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            max: 1,
+            grid: { color: '#E8E2D9' },
+            ticks: {
+              color: '#B91C1C',
+              font: { size: 11 },
+              callback: function(val) { return (val * 100) + '%'; }
+            }
+          },
+          yMetrics: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            max: 12,
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#15803D', font: { size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#718096', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

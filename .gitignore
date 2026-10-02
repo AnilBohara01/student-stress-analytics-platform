@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+stress_detection/venv/
+ENV/
+env.bak/
+venv.bak/
+
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# ML artifacts & temporary caches
+ml/models/*.pkl
+ml/models/*.joblib
+!ml/models/.gitkeep
+mlruns/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

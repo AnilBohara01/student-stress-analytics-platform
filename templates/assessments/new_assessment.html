@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}New Stress Assessment — StressLens{% endblock %}
+
+{% block content %}
+<div class="max-w-800 mx-auto">
+  <!-- Page Header -->
+  <div class="mb-4">
+    <h1 class="h2 mb-1">New Stress Assessment</h1>
+    <p class="text-secondary fs-7 mb-0">Record your academic workload and daily habits to run ML stress model analysis.</p>
+  </div>
+
+  <form method="POST" id="assessmentForm">
+    {% csrf_token %}
+
+    <!-- Card 1: Academic Profile -->
+    <div class="card-custom">
+      <div class="card-header-clean">
+        <h3 class="card-title-clean">
+          <i class="fa-solid fa-graduation-cap text-teal me-1"></i> 1. Academic Category & Timeline
+        </h3>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.student_type.id_for_label }}">{{ form.student_type.label }}</label>
+          {{ form.student_type }}
+          <div class="form-text">Select your current academic status</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.month.id_for_label }}">{{ form.month.label }}</label>
+          {{ form.month }}
+          <div class="form-text">Academic semester month period (1–12)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Daily Hours & Habits -->
+    <div class="card-custom">
+      <div class="card-header-clean">
+        <h3 class="card-title-clean">
+          <i class="fa-solid fa-clock text-teal me-1"></i> 2. Daily Time Allocation (Hours per day)
+        </h3>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.sleep_hours.id_for_label }}">{{ form.sleep_hours.label }}</label>
+          {{ form.sleep_hours }}
+          <div class="form-text">Average daily restorative sleep</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.study_hours.id_for_label }}">{{ form.study_hours.label }}</label>
+          {{ form.study_hours }}
+          <div class="form-text">Average daily academic study</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.social_media_hours.id_for_label }}">{{ form.social_media_hours.label }}</label>
+          {{ form.social_media_hours }}
+          <div class="form-text">Average daily screen time</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Academic Attendance & Perceived Ratings -->
+    <div class="card-custom">
+      <div class="card-header-clean">
+        <h3 class="card-title-clean">
+          <i class="fa-solid fa-sliders text-teal me-1"></i> 3. Engagement & Support Ratings
+        </h3>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.attendance.id_for_label }}">{{ form.attendance.label }}</label>
+          {{ form.attendance }}
+          <div class="form-text">Class attendance (0–100%)</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.exam_pressure.id_for_label }}">{{ form.exam_pressure.label }}</label>
+          {{ form.exam_pressure }}
+          <div class="form-text">Rating from 0 (None) to 10 (High)</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.family_support.id_for_label }}">{{ form.family_support.label }}</label>
+          {{ form.family_support }}
+          <div class="form-text">Rating from 0 (Low) to 10 (High)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Actions -->
+    <div class="d-flex align-items-center justify-content-between gap-3 pt-2">
+      <a href="{% url 'dashboard:home' %}" class="btn btn-outline-custom">Cancel</a>
+      <button type="submit" class="btn btn-primary-custom" id="submitBtn">
+        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>
+        <span id="btnText">Run AI Assessment</span>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("assessmentForm");
+    const btn = document.getElementById("submitBtn");
+    const btnText = document.getElementById("btnText");
+
+    if (form && btn) {
+      form.addEventListener("submit", function() {
+        btn.disabled = true;
+        btnText.textContent = "Analyzing your assessment...";
+      });
+    }
+  });
+</script>
+{% endblock %}

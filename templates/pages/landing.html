@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}StressLens — Student Stress Assessment & Lifestyle Analytics{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row align-items-center py-5 my-2">
+  <div class="col-lg-6 mb-4 mb-lg-0">
+    <div class="mb-3">
+      <span class="badge-clean badge-neutral">
+        <i class="fa-solid fa-microchip text-teal me-1"></i> Machine Learning Analytics Platform
+      </span>
+    </div>
+    
+    <h1 class="display-5 fw-bold mb-3 text-primary">
+      Understand your stress.<br>
+      <span style="color: var(--color-primary);">Understand your routine.</span>
+    </h1>
+    
+    <p class="fs-6 text-secondary mb-4 leading-relaxed">
+      Explore how your academic workload, sleep patterns, screen time, and perceived pressure relate to your stress indicators through transparent ML model analysis.
+    </p>
+
+    <div class="d-flex flex-wrap gap-3">
+      {% if user.is_authenticated %}
+        <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom">
+          <i class="fa-solid fa-plus-circle me-1"></i> Take an Assessment
+        </a>
+        <a href="{% url 'dashboard:home' %}" class="btn btn-outline-custom">
+          <i class="fa-solid fa-table-columns me-1"></i> View Dashboard
+        </a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary-custom">
+          <i class="fa-solid fa-arrow-right me-1"></i> Get Started Free
+        </a>
+        <a href="#how-it-works" class="btn btn-outline-custom">
+          How It Works
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-custom">
+      <div class="card-header-clean">
+        <div>
+          <span class="text-muted fs-7">Sample Assessment Preview</span>
+          <h3 class="card-title-clean">Assessment Breakdown</h3>
+        </div>
+        <span class="badge-clean badge-high-stress">High Stress Probability</span>
+      </div>
+
+      <div class="mb-4">
+        <div class="d-flex justify-content-between fs-7 text-secondary mb-1">
+          <span>High Stress Probability</span>
+          <span class="fw-bold text-danger">82.0%</span>
+        </div>
+        <div class="progress-clean">
+          <div class="progress-bar bg-danger" style="width: 82%;"></div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-2 bg-light border">
+        <div class="fw-semibold fs-7 text-primary mb-1">
+          <i class="fa-solid fa-diagram-project me-1"></i> Key Feature Attributions (SHAP)
+        </div>
+        <p class="fs-7 text-secondary mb-0">
+          Prediction is primarily driven by high reported <strong>Exam Pressure (8.5/10)</strong> and lower <strong>Sleep Duration (5.5 hrs)</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- How It Works Section -->
+<div id="how-it-works" class="py-5 border-top">
+  <div class="text-center max-w-700 mx-auto mb-5">
+    <h2 class="h2 mb-2">How StressLens Works</h2>
+    <p class="text-secondary fs-6">A transparent four-step process for evaluating student lifestyle indicators.</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-3">
+      <div class="card-custom h-100 p-4">
+        <div class="badge-clean badge-neutral mb-3" style="width: 40px; height: 40px; justify-content: center;">
+          <i class="fa-solid fa-pen-to-square text-teal fs-6"></i>
+        </div>
+        <h3 class="h4 mb-2">1. Input Lifestyle</h3>
+        <p class="fs-7 text-secondary mb-0">Record daily sleep, study duration, class attendance, and perceived pressure ratings.</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card-custom h-100 p-4">
+        <div class="badge-clean badge-neutral mb-3" style="width: 40px; height: 40px; justify-content: center;">
+          <i class="fa-solid fa-microchip text-teal fs-6"></i>
+        </div>
+        <h3 class="h4 mb-2">2. ML Inference</h3>
+        <p class="fs-7 text-secondary mb-0">A pre-trained XGBoost model evaluates multi-dimensional student lifestyle patterns.</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card-custom h-100 p-4">
+        <div class="badge-clean badge-neutral mb-3" style="width: 40px; height: 40px; justify-content: center;">
+          <i class="fa-solid fa-chart-pie text-teal fs-6"></i>
+        </div>
+        <h3 class="h4 mb-2">3. SHAP Attribution</h3>
+        <p class="fs-7 text-secondary mb-0">TreeExplainer algorithms extract exact feature impacts driving your assessment.</p>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card-custom h-100 p-4">
+        <div class="badge-clean badge-neutral mb-3" style="width: 40px; height: 40px; justify-content: center;">
+          <i class="fa-solid fa-compass text-teal fs-6"></i>
+        </div>
+        <h3 class="h4 mb-2">4. Track & Reflect</h3>
+        <p class="fs-7 text-secondary mb-0">Review personalized recommendations and monitor long-term lifestyle changes over time.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

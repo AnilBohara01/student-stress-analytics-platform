@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — StressLens Analytics{% endblock %}
+
+{% block content %}
+<!-- Header Row -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h2 mb-1">Student Analytics Dashboard</h1>
+    <p class="text-secondary fs-7 mb-0">Overview of your stress assessments, lifestyle indicators, and AI model predictions</p>
+  </div>
+  <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom">
+    <i class="fa-solid fa-plus me-1"></i> New Assessment
+  </a>
+</div>
+
+{% if total_count > 0 %}
+
+  <!-- KPI Summary Cards Grid -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Latest Stress Level</div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          {% if latest_assessment.predicted_stress_level == 1 %}
+            <span class="badge-clean badge-high-stress">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i> High Stress
+            </span>
+          {% else %}
+            <span class="badge-clean badge-low-stress">
+              <i class="fa-solid fa-shield-check me-1"></i> Low / Normal
+            </span>
+          {% endif %}
+        </div>
+        <div class="kpi-subtext mt-2">Logged: {{ latest_assessment.created_at|date:"M d, Y" }}</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Submissions</div>
+        <div class="kpi-value">{{ total_count }}</div>
+        <div class="kpi-subtext">Historical logs recorded</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Sleep Duration</div>
+        <div class="kpi-value">{{ metrics.avg_sleep|floatformat:1 }} <span class="fs-6 fw-normal text-muted">hrs</span></div>
+        <div class="kpi-subtext">Daily restorative sleep</div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Exam Pressure</div>
+        <div class="kpi-value">{{ metrics.avg_exam_pressure|floatformat:1 }} <span class="fs-6 fw-normal text-muted">/ 10</span></div>
+        <div class="kpi-subtext">Perceived workload score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chart & Insights Split -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card-custom h-100 mb-0">
+        <div class="card-header-clean">
+          <h3 class="card-title-clean">
+            <i class="fa-solid fa-chart-line text-teal me-1"></i> Predicted Stress Probability Trend
+          </h3>
+          <span class="fs-7 text-muted">Recent Assessments</span>
+        </div>
+        <div style="height: 250px; position: relative;">
+          <canvas id="stressTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-custom h-100 mb-0 d-flex flex-column">
+        <div class="card-header-clean">
+          <h3 class="card-title-clean">
+            <i class="fa-solid fa-lightbulb text-teal me-1"></i> Latest AI Insight
+          </h3>
+          {% if latest_assessment %}
+            <span class="badge-clean badge-neutral fs-8">{{ latest_assessment.model_version }}</span>
+          {% endif %}
+        </div>
+
+        {% if latest_assessment %}
+          <div class="flex-grow-1">
+            <div class="fs-7 text-muted mb-2">Logged: {{ latest_assessment.created_at|date:"F d, Y" }}</div>
+            <div class="p-3 rounded-2 bg-light border mb-3 fs-7 text-secondary">
+              {{ latest_assessment.narrative_explanation }}
+            </div>
+          </div>
+          <a href="{% url 'assessments:detail' pk=latest_assessment.pk %}" class="btn btn-outline-custom w-100 justify-content-center mt-auto">
+            View Full Report &rarr;
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Submissions Table -->
+  <div class="card-custom">
+    <div class="card-header-clean">
+      <h3 class="card-title-clean">
+        <i class="fa-solid fa-list text-teal me-1"></i> Recent Assessments
+      </h3>
+      <a href="{% url 'assessments:history' %}" class="fs-7 text-teal fw-medium text-decoration-none">
+        View History &rarr;
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Sleep</th>
+            <th>Study</th>
+            <th>Exam Pressure</th>
+            <th>Stress Level</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recent_assessments %}
+            <tr>
+              <td class="fw-medium">{{ item.created_at|date:"M d, Y" }}</td>
+              <td><span class="badge-clean badge-neutral">{{ item.get_student_type_display }}</span></td>
+              <td>{{ item.sleep_hours }} hrs</td>
+              <td>{{ item.study_hours }} hrs</td>
+              <td>{{ item.exam_pressure }} / 10</td>
+              <td>
+                {% if item.predicted_stress_level == 1 %}
+                  <span class="badge-clean badge-high-stress">High Stress</span>
+                {% else %}
+                  <span class="badge-clean badge-low-stress">Low / Normal</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'assessments:detail' pk=item.pk %}" class="btn btn-outline-custom btn-sm">
+                  View Report
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% else %}
+  <!-- Empty State -->
+  <div class="card-custom text-center py-5 my-3">
+    <div class="badge-clean badge-neutral mx-auto mb-3" style="width: 48px; height: 48px; justify-content: center;">
+      <i class="fa-solid fa-clipboard-question text-teal fs-4"></i>
+    </div>
+    <h2 class="h3 mb-2">You haven't completed an assessment yet</h2>
+    <p class="text-secondary fs-7 max-w-500 mx-auto mb-4">
+      Take your first assessment to record your lifestyle indicators and evaluate your stress probability using our trained ML model.
+    </p>
+    <a href="{% url 'assessments:new' %}" class="btn btn-primary-custom btn-lg">
+      <i class="fa-solid fa-plus-circle me-1"></i> Start Assessment
+    </a>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if total_count > 0 %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('stressTrendChart');
+    if (!ctx) return;
+
+    const chartLabels = [{% for item in recent_assessments reversed %}"{{ item.created_at|date:'M d' }}",{% endfor %}];
+    const chartData = [{% for item in recent_assessments reversed %}{{ item.probability_high_stress|floatformat:2 }},{% endfor %}];
+
+    new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: 'High Stress Probability',
+          data: chartData,
+          borderColor: '#0F766E',
+          backgroundColor: 'rgba(15, 118, 110, 0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#0F766E',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 1,
+            grid: { color: '#E8E2D9' },
+            ticks: {
+              color: '#718096',
+              font: { size: 11 },
+              callback: function(val) { return (val * 100) + '%'; }
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#718096', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

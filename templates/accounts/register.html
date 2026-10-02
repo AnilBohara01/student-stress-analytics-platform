@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — StressLens{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4 my-3">
+  <div class="col-md-6 col-lg-5">
+    <div class="panel-clean p-4">
+      <div class="text-center mb-4">
+        <h1 class="h2 mb-1">Create Student Account</h1>
+        <p class="text-soft fs-7 mb-0">Register to start evaluating your lifestyle indicators</p>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="fs-7 text-danger mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-primary-custom w-100 justify-content-center my-3">
+          Create Account
+        </button>
+      </form>
+
+      <div class="text-center pt-3 border-top">
+        <p class="fs-7 text-soft mb-0">
+          Already registered? <a href="{% url 'accounts:login' %}" class="fw-semibold text-teal text-decoration-none">Sign in here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

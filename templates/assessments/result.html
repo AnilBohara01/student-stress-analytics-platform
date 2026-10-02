@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Assessment Result — StressLens{% endblock %}
+
+{% block content %}
+<div class="max-w-900 mx-auto">
+
+  <!-- Header & Result Banner Card -->
+  <div class="card-custom">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3 pb-3 border-bottom">
+      <div>
+        <span class="text-muted fs-7">Assessment Record #{{ assessment.pk }} • {{ assessment.created_at|date:"F d, Y - H:i" }}</span>
+        <h1 class="h2 mb-0 mt-1">Assessment Result</h1>
+      </div>
+      <span class="badge-clean badge-neutral">Model: {{ assessment.model_version }}</span>
+    </div>
+
+    <!-- Stress Level Status Banner -->
+    <div class="p-4 rounded-3 text-center my-2 bg-light border">
+      <div class="text-muted fs-7 text-uppercase fw-semibold mb-2">Predicted Stress Level</div>
+      
+      {% if assessment.predicted_stress_level == 1 %}
+        <div class="badge-clean badge-high-stress fs-5 px-4 py-2 mb-3">
+          <i class="fa-solid fa-triangle-exclamation"></i> High Stress Predicted
+        </div>
+      {% else %}
+        <div class="badge-clean badge-low-stress fs-5 px-4 py-2 mb-3">
+          <i class="fa-solid fa-shield-check"></i> Low / Normal Stress Predicted
+        </div>
+      {% endif %}
+
+      <!-- Restrained Linear Indicator -->
+      <div class="max-w-500 mx-auto">
+        <div class="d-flex justify-content-between fs-7 text-secondary fw-medium mb-1">
+          <span>LOW STRESS</span>
+          <span>HIGH STRESS</span>
+        </div>
+        <div class="progress-clean">
+          <div class="progress-bar {% if assessment.predicted_stress_level == 1 %}bg-danger{% else %}bg-success{% endif %}" 
+               style="width: {% widthratio assessment.probability_high_stress 1 100 %}%;"></div>
+        </div>
+        <div class="d-flex justify-content-between fs-7 mt-2">
+          <span class="text-secondary">Low Stress Prob: <strong>{% widthratio assessment.probability_low_stress 1 100 %}%</strong></span>
+          <span class="text-secondary">High Stress Prob: <strong>{% widthratio assessment.probability_high_stress 1 100 %}%</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHAP Feature Attribution Card -->
+  <div class="card-custom">
+    <div class="card-header-clean">
+      <h3 class="card-title-clean">
+        <i class="fa-solid fa-diagram-project text-teal me-1"></i> Feature Attribution & Model Rationale
+      </h3>
+      <span class="fs-7 text-muted">SHAP Analysis</span>
+    </div>
+
+    <!-- Narrative Explanation Box -->
+    <div class="p-3 rounded-2 bg-light border mb-4">
+      <div class="fw-semibold fs-7 text-primary mb-1">
+        <i class="fa-solid fa-comment-dots me-1"></i> AI Explanation Summary
+      </div>
+      <p class="fs-7 text-secondary mb-0">
+        {{ assessment.narrative_explanation }}
+      </p>
+    </div>
+
+    <h4 class="h5 mb-3">Top Influencing Factors</h4>
+    <div class="row g-3">
+      {% for factor in assessment.top_contributing_factors %}
+        <div class="col-md-4">
+          <div class="p-3 rounded-2 border bg-surface">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-semibold fs-7 text-primary">{{ factor.feature_label }}</span>
+              {% if factor.shap_value > 0 %}
+                <span class="badge-clean badge-high-stress">+{{ factor.shap_value|floatformat:3 }}</span>
+              {% else %}
+                <span class="badge-clean badge-low-stress">{{ factor.shap_value|floatformat:3 }}</span>
+              {% endif %}
+            </div>
+            <div class="fs-7 text-muted">
+              {% if factor.shap_value > 0 %}
+                <i class="fa-solid fa-arrow-up text-danger me-1"></i> Increases Stress Score
+              {% else %}
+                <i class="fa-solid fa-arrow-down text-success me-1"></i> Supports Wellbeing
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Personalized Lifestyle Guidance Card -->
+  <div class="card-custom">
+    <div class="card-header-clean">
+      <h3 class="card-title-clean">
+        <i class="fa-solid fa-compass text-teal me-1"></i> Personalized Lifestyle Guidance
+      </h3>
+    </div>
+
+    <div class="row g-3">
+      {% for card in feedback_list %}
+        <div class="col-md-6">
+          <div class="p-3 rounded-2 border bg-light h-100">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge-clean badge-neutral"><i class="{{ card.icon }}"></i></span>
+              <span class="fw-semibold fs-7 text-primary">{{ card.title }}</span>
+              <span class="ms-auto badge-clean badge-neutral fs-8">{{ card.category }}</span>
+            </div>
+            <p class="fs-7 text-secondary mb-0">
+              {{ card.suggestion }}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Submitted Feature Indicators Summary -->
+  <div class="card-custom">
+    <div class="card-header-clean">
+      <h3 class="card-title-clean">
+        <i class="fa-solid fa-sliders text-teal me-1"></i> Submitted Lifestyle Indicators
+      </h3>
+    </div>
+
+    <div class="row g-3 text-center">
+      <div class="col-6 col-md-3">
+        <div class="p-2 border rounded-2 bg-light">
+          <div class="fs-7 text-muted">Sleep</div>
+          <div class="fw-semibold text-primary fs-6">{{ assessment.sleep_hours }} hrs</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 border rounded-2 bg-light">
+          <div class="fs-7 text-muted">Study</div>
+          <div class="fw-semibold text-primary fs-6">{{ assessment.study_hours }} hrs</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 border rounded-2 bg-light">
+          <div class="fs-7 text-muted">Exam Pressure</div>
+          <div class="fw-semibold text-primary fs-6">{{ assessment.exam_pressure }} / 10</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-2 border rounded-2 bg-light">
+          <div class="fs-7 text-muted">Family Support</div>
+          <div class="fw-semibold text-primary fs-6">{{ assessment.family_support }} / 10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{% url 'assessments:export_pdf' pk=assessment.pk %}" class="btn btn-primary-custom">
+      <i class="fa-solid fa-file-pdf me-1"></i> Download PDF Report
+    </a>
+    <a href="{% url 'assessments:new' %}" class="btn btn-outline-custom">
+      <i class="fa-solid fa-plus-circle me-1"></i> New Assessment
+    </a>
+    <a href="{% url 'assessments:history' %}" class="btn btn-outline-custom">
+      <i class="fa-solid fa-clock-rotate-left me-1"></i> View History
+    </a>
+  </div>
+</div>
+{% endblock %}
