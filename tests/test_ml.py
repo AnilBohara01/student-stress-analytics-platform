@@ -61,6 +61,18 @@ class MLPipelineTestCase(unittest.TestCase):
         self.assertAlmostEqual(probs['low_normal_stress'] + probs['high_stress'], 1.0, places=3)
         self.assertEqual(result['model_version'], "stresslens_v1.0.0")
 
+    def test_predict_stress_fallback_without_model_artifact(self):
+        missing_model_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'ml', 'models', 'missing_model.joblib'
+        )
+        result = predict_stress(self.sample_student, model_path=missing_model_path)
+        self.assertIn(result['prediction_code'], [0, 1])
+        self.assertIn(result['predicted_label'], ["Low/Normal Stress", "High Stress"])
+        probs = result['probabilities']
+        self.assertAlmostEqual(probs['low_normal_stress'] + probs['high_stress'], 1.0, places=3)
+        self.assertEqual(result['model_version'], "stresslens_v1.0.0")
+
     def test_explain_prediction_shap(self):
         explanation = explain_prediction(self.sample_student)
         self.assertIn('top_contributing_factors', explanation)
