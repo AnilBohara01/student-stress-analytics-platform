@@ -1,7 +1,11 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
+from unittest.mock import patch
+import requests
+
 from .models import Assessment
+from .services import get_assessment_analysis
 
 
 class AssessmentBackendTestCase(TestCase):
@@ -59,3 +63,23 @@ class AssessmentBackendTestCase(TestCase):
         self.assertEqual(pdf_response['Content-Type'], 'application/pdf')
         self.assertTrue(len(pdf_response.content) > 1000)  # Valid non-empty PDF byte stream
 
+
+class AssessmentServiceFallbackTestCase(TestCase):
+    @patch('assessments.services.predict_stress', side_effect=FileNotFoundError("missing model"))
+    @patch('assessments.services.requests.post', side_effect=requests.RequestException("fastapi unavailable"))
+    def test_rule_based_fallback_used_when_ml_artifacts_unavailable(self, _mock_post, _mock_predict):
+        result = get_assessment_analysis({
+            'Student_Type': 'college',
+            'Sleep_Hours': 5.5,
+            'Study_Hours': 7.0,
+            'Social_Media_Hours': 4.0,
+            'Attendance': 75.0,
+            'Exam_Pressure': 8.5,
+            'Family_Support': 3.5,
+            'Month': 10,
+        })
+
+        self.assertEqual(result['source'], 'rule_based_fallback')
+        self.assertIn(result['prediction_code'], [0, 1])
+        self.assertIn(result['predicted_label'], ["Low/Normal Stress", "High Stress"])
+        self.assertGreater(len(result['top_contributing_factors']), 0)
